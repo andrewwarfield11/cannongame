@@ -2,4 +2,4 @@
 
 This is a game that I made in java. 
 
-<img src="https://imgur.com/a/ussK1KG"></img>
+<img src="https://imgur.com/GOvabbv"></img>
