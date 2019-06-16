@@ -1,4 +1,5 @@
 # cannongame
 
 This is a game that I made in java. 
-[!Alt text](screenshots/ingame.png)
+
+<img src="https://imgur.com/a/ussK1KG"></img>
