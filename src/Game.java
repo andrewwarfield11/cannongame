@@ -49,9 +49,9 @@ public class Game extends GameFrame {
 	private boolean ownsAirStrike = false; // fix airstrike sound
 	private boolean airStriking = false;
 	private boolean airStrikeUsed = false;
-	private ArrayList<Bullet> fred; // the bullets
+	private ArrayList<Bullet> bulletList; // the bullets
 	private ArrayList<AirStrikeBullet> airStrike; 
-	private Point2D.Double fredClick;
+	private Point2D.Double clickLoc;
 	private Cannon cannon;
 	private ArrayList<Guys> guys;
 	private ArrayList<FlyingGuy> flies;
@@ -102,7 +102,7 @@ public class Game extends GameFrame {
 	private void newLevel() {
 		if(level != maxLevel) {
 			outOfAmmo = false;
-			fred.clear();
+			bulletList.clear();
 			outOfAmmoCounter = 0;
 			timeSinceSpawn = 0;
 			ammo = maxAmmo;
@@ -170,10 +170,10 @@ public class Game extends GameFrame {
 		ground = new Ground();
 		System.out.println("Ground height: " + Ground.HEIGHT);
 		rand = new Random();
-		fred = new ArrayList<Bullet>();
+		bulletList = new ArrayList<Bullet>();
 		menu = new Menu();
 		airStrike = new ArrayList<AirStrikeBullet>();
-		fredClick = new Point2D.Double();
+		clickLoc = new Point2D.Double();
 		timeSinceSpawn = 0;
 		timeSinceShot = 100;
 		try {
@@ -191,17 +191,7 @@ public class Game extends GameFrame {
 
 		airClip = new ClipInfo("airstrike", "airstrike.wav");
 		backClip = new ClipInfo("background", "Tower-Defense.wav");
-		//clip.load("background", "Tower-Defense.wav");
 		backClip.play( true);
-		//MidisLoader midi = new MidisLoader();
-		//midi.load("background", "Tower-Defense.mp3.mid");
-		//midi.play("background", true);
-
-		//menu.changeToShop();
-		//menu.addMoneys(500);
-		//menu.changeToEndScreen();
-
-
 
 	}
 
@@ -252,14 +242,14 @@ public class Game extends GameFrame {
 	protected void mouseLeftPress(int x, int y) {
 		if(gameState == INGAME) {
 			if(timeSinceShot >= 0 && !outOfAmmo) { // taking away the restriction for now
-				fredClick = new Point2D.Double(x, y);
-				if(!tower.triedToShootTheTower(fredClick)) {
+				clickLoc = new Point2D.Double(x, y);
+				if(!tower.triedToShootTheTower(clickLoc)) {
 					if(!isExplosive || (isExplosive && menu.getExplosiveAmmo() > 0)) {
 						//clip.add(new ClipsLoader());
 						//clip.get(clip.size()-1).load("cannon", "cannon.wav");
 						//clip.get(clip.size()-1).play("cannon", false);
-						fred.add(new Bullet(fredClick, isExplosive, false));
-						fred.get(fred.size()-1).prepareShot();
+						bulletList.add(new Bullet(clickLoc, isExplosive, false));
+						bulletList.get(bulletList.size()-1).prepareShot();
 						timeSinceShot = 0;
 						ammo -= 1;
 						if(ammo == 0) {
@@ -391,9 +381,9 @@ public class Game extends GameFrame {
 
 			// draw game elements: the cannon and the bullet
 			tower.draw(dbg);
-			for(int i = 0; i < fred.size(); i++) //drawing all of the bullets
-				if(fred.get(i).isOnScreen())
-					fred.get(i).draw(dbg);
+			for(int i = 0; i < bulletList.size(); i++) //drawing all of the bullets
+				if(bulletList.get(i).isOnScreen())
+					bulletList.get(i).draw(dbg);
 			ground.draw(dbg);
 			cannon.draw(dbg);
 			if(ownsAirStrike && airStriking) {
@@ -434,10 +424,6 @@ public class Game extends GameFrame {
 
 	@Override
 	protected void simpleUpdate() {
-		// gotta get the explosion to actually kill people
-		// make sure to work on that later
-		// also get it to work with explosive ammo
-
 
 		if(gameState == INGAME) {
 
@@ -462,40 +448,40 @@ public class Game extends GameFrame {
 			}
 
 			//moving all of the bullets
-			if(!fred.isEmpty()) {
-				for(int i = 0; i < fred.size(); i++) {
-					if(fred.get(i).isExplosive() && fred.get(i).hitGround() &&!fred.get(i).isExploding())
-						fred.get(i).explode();
+			if(!bulletList.isEmpty()) {
+				for(int i = 0; i < bulletList.size(); i++) {
+					if(bulletList.get(i).isExplosive() && bulletList.get(i).hitGround() &&!bulletList.get(i).isExploding())
+						bulletList.get(i).explode();
 
-					if(((fred.get(i).isOnScreen() && fred.get(i).moving) || fred.get(i).isExploding()) &&!fred.get(i).finishedExploding()) {
-						fred.get(i).move();
+					if(((bulletList.get(i).isOnScreen() && bulletList.get(i).moving) || bulletList.get(i).isExploding()) &&!bulletList.get(i).finishedExploding()) {
+						bulletList.get(i).move();
 						for(int j = 0; j < flies.size(); j++) { // deals with killing the flying guys
-							if(fred.get(i).hitFlyingGuy(flies.get(j)) && !fred.get(i).isExploding()) {
+							if(bulletList.get(i).hitFlyingGuy(flies.get(j)) && !bulletList.get(i).isExploding()) {
 								flies.get(j).ded();
-								fred.get(i).stopMoving();
+								bulletList.get(i).stopMoving();
 								score += 3;
 								moneyCounter += 10;
-								if(fred.get(i).isExplosive()) {
-									fred.get(i).explode();
+								if(bulletList.get(i).isExplosive()) {
+									bulletList.get(i).explode();
 								}
 							}
-							if(fred.get(i).isExploding()) {
-								if(fred.get(i).getExplosion().intersects(flies.get(j).getRect())) {
+							if(bulletList.get(i).isExploding()) {
+								if(bulletList.get(i).getExplosion().intersects(flies.get(j).getRect())) {
 									flies.get(j).ded();
 									score += 3;
 									moneyCounter += 10;
 								}
 							}
 
-							if(fred.get(i).hitEnemyBullet(flies.get(j))) { // if a bullet hits an enemy bullet
+							if(bulletList.get(i).hitEnemyBullet(flies.get(j))) { // if a bullet hits an enemy bullet
 								flies.get(j).destroyBullet();
-								fred.get(i).stopMoving();
+								bulletList.get(i).stopMoving();
 								score++;
 								moneyCounter += 2;
-								if(fred.get(i).isExplosive())
-									fred.get(i).explode();
-								if(fred.get(i).isExploding()) {
-									if(fred.get(i).getExplosion().contains(flies.get(j).getBullet())) {
+								if(bulletList.get(i).isExplosive())
+									bulletList.get(i).explode();
+								if(bulletList.get(i).isExploding()) {
+									if(bulletList.get(i).getExplosion().contains(flies.get(j).getBullet())) {
 										flies.get(j).destroyBullet();
 										score++;
 										moneyCounter += 2;
@@ -507,10 +493,10 @@ public class Game extends GameFrame {
 						}
 					}
 					else {
-						if(!fred.get(i).hit()) {
+						if(!bulletList.get(i).hit()) {
 							score -= 0.5;
 						}
-						fred.remove(i); // remove off screen bullets
+						bulletList.remove(i); // remove off screen bullets
 					}
 				}
 			}
@@ -534,19 +520,19 @@ public class Game extends GameFrame {
 			for(int i = 0; i < guys.size();i++) { //moves the guys and kills them if they got hit by a bullet
 				if(guys.get(i).isAlive()) {
 					guys.get(i).move();
-					for(int j = 0; j < fred.size(); j++) {
-						if(guys.get(i) != null && fred.get(j).hitGuy(guys.get(i)) && !fred.get(j).isExploding()) { 
+					for(int j = 0; j < bulletList.size(); j++) {
+						if(guys.get(i) != null && bulletList.get(j).hitGuy(guys.get(i)) && !bulletList.get(j).isExploding()) {
 							//null pointer exception here???? ^^^
 							guys.get(i).ded();
-							fred.get(j).stopMoving();
+							bulletList.get(j).stopMoving();
 							score += 2;
 							moneyCounter += 5;
-							if(fred.get(j).isExplosive())
-								fred.get(j).explode();
+							if(bulletList.get(j).isExplosive())
+								bulletList.get(j).explode();
 
 						}
-						if(fred.get(j).isExploding()) {
-							if(fred.get(j).getExplosion().intersects(guys.get(i).getRect())) {
+						if(bulletList.get(j).isExploding()) {
+							if(bulletList.get(j).getExplosion().intersects(guys.get(i).getRect())) {
 								guys.get(i).ded();
 								score += 2;
 								moneyCounter += 5;	
@@ -673,46 +659,6 @@ public class Game extends GameFrame {
 				guys.remove(i);
 		}
 	}
-
-	//resetting variables for the start of a new level
-	/*private void newLevel() {
-		if(level != maxLevel) {
-			fred.clear();
-			outOfAmmoCounter = 0;
-			timeSinceSpawn = 0;
-			ammo = maxAmmo;
-			timeSinceShot = 100;
-			flyingGuySpawnRate -= 5;
-			guySpawnRate +=5;
-			enemiesSpawned = 0;
-			level++;
-			if(level == maxLevel)
-				maxEnemiesSpawned = 1;
-			else
-				maxEnemiesSpawned += 5;
-			tower.resetHealth();
-			if(level == 5) {
-				guySpeed++;
-			}
-			menu.addMoneys((int)moneyCounter);
-			menu.addToScore(score);
-			menu.changeToShop();
-			gameState = MENU;
-			moneyCounter = 0;
-			score = 0;
-			if(ownsDrone) 
-				drone.goBack();
-			if(ownsAirStrike)
-				airStrike.clear();
-			airStriking = false;
-			this.airStrikeUsed = false;
-		}
-		else { // end of the game
-			menu.won();
-			menu.changeToEndScreen();
-			gameState = MENU;
-		}
-	}*/
 
 	private boolean noEnemies() {
 		if(flies.isEmpty() && guys.isEmpty())
